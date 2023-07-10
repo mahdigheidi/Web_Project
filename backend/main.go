@@ -410,25 +410,38 @@ func CreateBooking(c *gin.Context) {
 		c.AbortWithStatus(404)
 		fmt.Println(err)
 	}
-	// startTime, err := time.Parse("2000-07-10", jsonData["Start"])
-	startTime, err := time.Parse("2000-07-10", "2000-07-10")
+
+	startTime, err := ParseTime(jsonData["Start"])
 	if err != nil {
 		c.AbortWithStatus(404)
 		fmt.Println(err)
+		return
 	}
-	endTime, err := time.Parse("2023-07-10T09:00:00", jsonData["End"])
+	endTime, err := ParseTime(jsonData["End"])
 	if err != nil {
 		c.AbortWithStatus(404)
 		fmt.Println(err)
+		return
 	}
 	attendees, err := strconv.Atoi(jsonData["Attendees"])
 	if err != nil {
 		c.AbortWithStatus(404)
 		fmt.Println(err)
+		return
+	}
+	roomId, err := strconv.Atoi(jsonData["RoomID"])
+	if err != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+		return
+	}
+	var room Room
+	if err := db.Where("id = ?", roomId).First(&room).Error; err != nil {
+		c.String(404, "Room not found")
+		return
 	}
 	var booking = Booking{
-		// RoomID: jsonData["RoomID"],
-		RoomID:    1,
+		RoomID:    uint(roomId),
 		UserID:    (*user).ID,
 		Start:     startTime,
 		End:       endTime,
@@ -437,9 +450,19 @@ func CreateBooking(c *gin.Context) {
 	}
 
 	fmt.Println("booook!")
-	fmt.Println(booking.RoomID)
-	// db.Create(&booking)
+	fmt.Println(booking)
+	db.Create(&booking)
 	c.JSON(200, booking)
+}
+
+func ParseTime(t string) (time.Time, error) {
+	time_layout := (time.RFC3339)[:19]
+	pTime, err := time.Parse(time_layout, t)
+	if err != nil {
+		fmt.Println(err)
+		return time.Now(), err
+	}
+	return pTime, nil
 }
 
 func UpdateBooking(c *gin.Context) {

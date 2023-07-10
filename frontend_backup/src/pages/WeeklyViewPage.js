@@ -186,8 +186,10 @@ const Calendar = () => {
             room: event.RoomID,
             office: "Office 2",
             attendees: event.Attendees,
-            start: (event.Start).substring(0, (event.Start).indexOf(".")),
-            end: (event.End).substring(0, (event.End).indexOf(".")),
+            // start: (event.Start).substring(0, (event.Start).indexOf(".")),
+            // end: (event.End).substring(0, (event.End).indexOf(".")),
+            start: (event.Start),
+            end: (event.End),
             backColor:"#cc4125"
           }
         }
