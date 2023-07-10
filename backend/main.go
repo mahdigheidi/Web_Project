@@ -44,10 +44,10 @@ type Office struct {
 }
 
 type Room struct {
-	ID        uint `gorm:"primaryKey"`
-	Name      string
-	Capacity  uint
-	OfficeID  uint
+	ID        uint   `json:"id" gorm:"primaryKey"`
+	Name      string `json:"name"`
+	Capacity  uint   `json:"capacity"`
+	OfficeID  uint   `json:"office_id"`
 	Office    Office
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -62,6 +62,7 @@ type Booking struct {
 	End       time.Time
 	RoomID    uint
 	Room      Room
+	OfficeID  uint
 	Attendees uint
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -134,7 +135,6 @@ func init_db() {
 		End:    time.Now().Add(time.Hour * 3),
 		RoomID: 1,
 	})
-
 }
 
 func main() {
@@ -306,13 +306,16 @@ func Logout(c *gin.Context) {
 
 }
 
-func GetOffices(c *gin.Context) {
-	var offices []Office
-	if err := db.Find(&offices).Error; err != nil {
+func GetBookings(c *gin.Context) {
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+	var bookings []Booking
+	if err := db.Find(&bookings).Error; err != nil {
 		c.AbortWithStatus(404)
 		fmt.Println(err)
 	} else {
-		c.JSON(200, offices)
+
+		c.JSON(200, bookings)
 	}
 }
 
@@ -323,6 +326,16 @@ func GetRooms(c *gin.Context) {
 		fmt.Println(err)
 	} else {
 		c.JSON(200, rooms)
+	}
+}
+
+func GetOffices(c *gin.Context) {
+	var offices []Office
+	if err := db.Find(&offices).Error; err != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+	} else {
+		c.JSON(200, offices)
 	}
 }
 
@@ -372,18 +385,6 @@ func DeleteUser(c *gin.Context) {
 	d := db.Where("id = ?", id).Delete(&user)
 	fmt.Println(d)
 	c.JSON(200, gin.H{"id #" + id: "deleted"})
-}
-
-func GetBookings(c *gin.Context) {
-	c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-	var bookings []Booking
-	if err := db.Find(&bookings).Error; err != nil {
-		c.AbortWithStatus(404)
-		fmt.Println(err)
-	} else {
-		c.JSON(200, bookings)
-	}
 }
 
 func GetBooking(c *gin.Context) {
@@ -442,6 +443,7 @@ func CreateBooking(c *gin.Context) {
 	}
 	var booking = Booking{
 		RoomID:    uint(roomId),
+		OfficeID:  room.OfficeID,
 		UserID:    (*user).ID,
 		Start:     startTime,
 		End:       endTime,
@@ -450,7 +452,7 @@ func CreateBooking(c *gin.Context) {
 	}
 
 	fmt.Println("booook!")
-	fmt.Println(booking)
+	fmt.Println(room)
 	db.Create(&booking)
 	c.JSON(200, booking)
 }

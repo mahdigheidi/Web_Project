@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import AsyncSelect from 'react-select/async';
 import { DayPilot, DayPilotCalendar, DayPilotNavigator } from "@daypilot/daypilot-lite-react";
 import "./WeekStyle.css";
 import { indexOf } from 'lodash';
@@ -14,6 +15,16 @@ const styles = {
     flexGrow: "1"
   }
 };
+
+const event_colors = [
+  "#6aa84f",
+  "#f1c232",
+  "#cc4125"
+]
+
+function getRandomColor() {
+  return event_colors[(Math.floor(Math.random() * event_colors.length))];
+}
 
 const Calendar = () => {
   const [selectedOffice, setSelectedOffice] = useState("");
@@ -53,12 +64,9 @@ const Calendar = () => {
       body: JSON.stringify({
         "Start": args.start,
         "End": args.end,
-        // id: DayPilot.guid(),
         "Title": modal.result.title,
         "RoomID": modal.result.room,
-        // office: modal.result.office,
         "Attendees": modal.result.attendees,
-        // "userID": 1
       })
     })
         
@@ -77,15 +85,16 @@ const Calendar = () => {
   }
 
   const handleEventEdition  = async (args) => {
+    // TODO
     const dp = calendarRef.current.control;
   //   const modal = await DayPilot.Modal.prompt("Update Meeting Details:", args.e.text());
-  const modal = await DayPilot.Modal.form({
-      // "Update Meeting Details:",
-      title: args.e.text(),
-      room: args.e.data.room,
-      office: args.e.data.office,
-      attendees: args.e.data.attendees,
-  });
+    const modal = await DayPilot.Modal.form({
+        // "Update Meeting Details:",
+        title: args.e.text(),
+        room: args.e.data.room,
+        office: args.e.data.office,
+        attendees: args.e.data.attendees,
+    });
     if (!modal.result) { return; }
     const e = args.e;
     e.data.text = modal.result.title;
@@ -95,7 +104,42 @@ const Calendar = () => {
     dp.events.update(e);
   }
 
+  const fetchOffices  = async (args) => {
+    const response = await fetch("http://localhost:8080/office/", {
+      method: "GET", 
+    })
+  }
 
+  const OfficeSelect = () => {
+    return (
+
+      <AsyncSelect
+        style={{
+          marginLeft: '5px',
+          padding: '5px',
+          borderRadius: '5px',
+          border: '1px solid #ccc',
+          backgroundColor: '#f8f8f8',
+          color: '#333',
+        }}
+        cacheOptions
+        defaultOptions
+        value={selectedValue}
+        getOptionLabel={e => e.first_name + ' ' + e.last_name}
+        getOptionValue={e => e.id}
+        loadOptions={fetchOffices}
+        onInputChange={handleInputChange}
+        onChange={handleChange}
+      />
+      // <select  name="office" id="office" onChange={handleOfficeSelectorChange} value={selectedOffice}>
+      //     <option value="none">none</option>
+      //     <option value="Office 1">Office 1</option>
+      //     <option value="Office 2">Office 2</option>
+      //     <option value="Office 3">Office 3</option>
+      //     {/* Add more office options as needed */}
+      // </select>
+    )
+  }
 
   const calendarRef = useRef();
   const [calendarConfig, setCalendarConfig] = useState({
@@ -113,15 +157,6 @@ const Calendar = () => {
     // get rooms from back
     const response = await fetch("http://localhost:8080/booking/", {
       method: "GET", 
-      // headers: {
-      //   'Content-Type': 'application/json',
-      //   'Access-Control-Allow-Credintials': 'true'
-      // },
-      // credentials:'include',
-      // body: JSON.stringify({
-      //   "username": uname,
-      //   "password": pass
-      // })
     })
 
     const content = await response.json()
@@ -176,7 +211,7 @@ const Calendar = () => {
     const filteredEvents = events.filter(
         (event) =>
           (selectedRoom === "" || event.RoomID === selectedRoom) // &&
-          // (selectedOffice === "" || event.office === selectedOffice)
+          (selectedOffice === "" || event.office === selectedOffice)
       );
     const mappedEvents = events.map(
         (event) => {
@@ -184,13 +219,13 @@ const Calendar = () => {
             id: event.ID, 
             text: event.Title,
             room: event.RoomID,
-            office: "Office 2",
+            office: event.OfficeID,
             attendees: event.Attendees,
             // start: (event.Start).substring(0, (event.Start).indexOf(".")),
             // end: (event.End).substring(0, (event.End).indexOf(".")),
             start: (event.Start),
             end: (event.End),
-            backColor:"#cc4125"
+            backColor: getRandomColor()
           }
         }
     )
@@ -215,20 +250,7 @@ const Calendar = () => {
     <>
     <div>
     <label htmlFor="btn-check5" className="btn btn-primary-border" >Select Office: 
-      <select style={{
-        marginLeft: '5px',
-        padding: '5px',
-        borderRadius: '5px',
-        border: '1px solid #ccc',
-        backgroundColor: '#f8f8f8',
-        color: '#333',
-      }} name="office" id="office" onChange={handleOfficeSelectorChange} value={selectedOffice}>
-        <option value="none">none</option>
-        <option value="Office 1">Office 1</option>
-        <option value="Office 2">Office 2</option>
-        <option value="Office 3">Office 3</option>
-        {/* Add more office options as needed */}
-      </select>
+      <OfficeSelect />
     </label>
       <label htmlFor="btn-check5" className="btn btn-primary-border">Select Room: 
       <select style={{
