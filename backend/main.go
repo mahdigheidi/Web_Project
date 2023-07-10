@@ -81,8 +81,12 @@ func init_db() {
 	db.AutoMigrate(&Booking{})
 
 	// Create all users
-	// db.Create(&User{ID: 1, Username: "user1", Password: "pass1"})
-	// db.Create(&User{ID: 2, Username: "user2", Password: "pass2"})
+	// password, _ := bcrypt.GenerateFromPassword([]byte("1111"), 14)
+	// db.Create(&User{ID: 1, Username: "user1", Password: password})
+	// db.Create(&User{ID: 2, Username: "user2", Password: password})
+	// db.Create(&User{ID: 3, Username: "user3", Password: password})
+	// db.Create(&User{ID: 4, Username: "user4", Password: password})
+	// db.Create(&User{ID: 5, Username: "user5", Password: password})
 
 	// Create all offices
 	db.Create(&Office{ID: 1, Name: "NewYork"})
@@ -108,6 +112,29 @@ func init_db() {
 
 	db.Create(&Room{ID: 13, Name: "Toronto Multi A", Capacity: 6, OfficeID: 4})
 	db.Create(&Room{ID: 14, Name: "Toronto Conference", Capacity: 12, OfficeID: 4})
+
+	db.Create(&Booking{
+		Title:  "Backend meeting",
+		UserID: 4,
+		Start:  time.Now(),
+		End:    time.Now().Add(time.Hour * 3),
+		RoomID: 1,
+	})
+	db.Create(&Booking{
+		Title:  "Frontend meeting",
+		UserID: 5,
+		Start:  time.Now(),
+		End:    time.Now().Add(time.Hour * 3),
+		RoomID: 1,
+	})
+	db.Create(&Booking{
+		Title:  "HR meeting",
+		UserID: 4,
+		Start:  time.Now(),
+		End:    time.Now().Add(time.Hour * 3),
+		RoomID: 1,
+	})
+
 }
 
 func main() {
@@ -142,7 +169,7 @@ func main() {
 
 	r.GET("/booking/", GetBookings)
 	r.GET("/booking/:id", GetBooking)
-	r.POST("/booking", CreateBooking)
+	r.POST("/add_booking", CreateBooking)
 	r.PUT("/booking/:id", UpdateBooking)
 	r.DELETE("/booking/:id", DeleteBooking)
 
@@ -150,6 +177,7 @@ func main() {
 	// config.AllowAllOrigins = true
 	config.AllowOrigins = []string{"http://localhost:3000"}
 	config.AddAllowHeaders("Access-Control-Allow-Credintials")
+	config.AddAllowHeaders("Access-Control-Allow-Origin")
 
 	config.AllowCredentials = true
 	config.AllowWildcard = true
@@ -223,13 +251,11 @@ func Login(c *gin.Context) {
 	c.JSON(200, user)
 }
 
-func CheckUser(c *gin.Context) {
-	c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+func GetLoginnedUser(c *gin.Context) (*User, error) {
 	cookie, err := c.Cookie("jwt")
 	if err != nil {
 		c.String(404, "No token!")
-		return
+		return nil, err
 	}
 	token, err := jwt.ParseWithClaims(cookie, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return SecretKey, nil
@@ -237,7 +263,7 @@ func CheckUser(c *gin.Context) {
 
 	if err != nil {
 		c.String(404, "Wrong token!")
-		return
+		return nil, err
 	}
 	claims := token.Claims.(*jwt.StandardClaims)
 	var user User
@@ -245,8 +271,21 @@ func CheckUser(c *gin.Context) {
 	if err := db.Where("id = ?", claims.Issuer).First(&user).Error; err != nil {
 		c.AbortWithStatus(404)
 		fmt.Println(err)
+		return nil, err
 	} else {
-		c.JSON(200, user)
+		// c.JSON(200, user)
+		return &user, nil
+	}
+}
+
+func CheckUser(c *gin.Context) {
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+	if user, err := GetLoginnedUser(c); err != nil {
+		return
+	} else {
+		fmt.Println(*user)
+		c.JSON(200, *user)
 	}
 }
 
@@ -336,6 +375,8 @@ func DeleteUser(c *gin.Context) {
 }
 
 func GetBookings(c *gin.Context) {
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	var bookings []Booking
 	if err := db.Find(&bookings).Error; err != nil {
 		c.AbortWithStatus(404)
@@ -357,9 +398,47 @@ func GetBooking(c *gin.Context) {
 }
 
 func CreateBooking(c *gin.Context) {
-	var booking Booking
-	c.BindJSON(&booking)
-	db.Create(&booking)
+	var user *User
+	if user, err = GetLoginnedUser(c); err != nil {
+		fmt.Println("user not found")
+		return
+	}
+
+	var jsonData map[string]string
+	data, _ := ioutil.ReadAll(c.Request.Body)
+	if e := json.Unmarshal(data, &jsonData); e != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+	}
+	// startTime, err := time.Parse("2000-07-10", jsonData["Start"])
+	startTime, err := time.Parse("2000-07-10", "2000-07-10")
+	if err != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+	}
+	endTime, err := time.Parse("2023-07-10T09:00:00", jsonData["End"])
+	if err != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+	}
+	attendees, err := strconv.Atoi(jsonData["Attendees"])
+	if err != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+	}
+	var booking = Booking{
+		// RoomID: jsonData["RoomID"],
+		RoomID:    1,
+		UserID:    (*user).ID,
+		Start:     startTime,
+		End:       endTime,
+		Attendees: uint(attendees),
+		Title:     jsonData["Title"],
+	}
+
+	fmt.Println("booook!")
+	fmt.Println(booking.RoomID)
+	// db.Create(&booking)
 	c.JSON(200, booking)
 }
 
