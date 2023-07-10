@@ -29,6 +29,7 @@ export default function SignUpPage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    console.log('in handle submit')
     const response = await fetch("http://localhost:8080/register/", {
       method: "POST", 
       headers: {'Content-Type': 'application/json'},
