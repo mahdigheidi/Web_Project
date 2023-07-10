@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go/v4"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	_ "golang.org/x/crypto/bcrypt"
@@ -22,11 +23,13 @@ var db *gorm.DB
 var err error
 var SecretKey *ecdsa.PrivateKey
 
+const frontUrl = "http://localhost:3000"
+
 type User struct {
 	ID        uint `json:"id" gorm:"primaryKey"`
 	FirstName string
 	LastName  string
-	Username  string `json:"username"`
+	Username  string `json:"username" gorm:"unique"`
 	Password  []byte `json:"-"`
 	Email     string
 	CreatedAt time.Time
@@ -142,11 +145,22 @@ func main() {
 	r.POST("/booking", CreateBooking)
 	r.PUT("/booking/:id", UpdateBooking)
 	r.DELETE("/booking/:id", DeleteBooking)
+
+	config := cors.DefaultConfig()
+	// config.AllowAllOrigins = true
+	config.AllowOrigins = []string{"http://localhost:3000"}
+	config.AddAllowHeaders("Access-Control-Allow-Credintials")
+
+	config.AllowCredentials = true
+	config.AllowWildcard = true
+
+	r.Use(cors.New(config))
 	r.Run(":8080")
 }
 
 func Register(c *gin.Context) {
-
+	c.Writer.Header().Set("Access-Control-Allow-Origin", frontUrl)
+	// TODO : handle used username
 	var jsonData map[string]string
 	data, _ := ioutil.ReadAll(c.Request.Body)
 	if e := json.Unmarshal(data, &jsonData); e != nil {
@@ -164,6 +178,10 @@ func Register(c *gin.Context) {
 }
 
 func Login(c *gin.Context) {
+	// fmt.Println(c.Request.Header)
+	// fmt.Println(c.res)
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	var jsonData map[string]string
 	data, _ := ioutil.ReadAll(c.Request.Body)
 	if e := json.Unmarshal(data, &jsonData); e != nil {
@@ -174,7 +192,6 @@ func Login(c *gin.Context) {
 	if err := db.Where("username = ?", jsonData["username"]).First(&user).Error; err != nil {
 		c.String(404, "Login failed.")
 	} else {
-		fmt.Println(user.Username)
 		if err := bcrypt.CompareHashAndPassword(user.Password, []byte(jsonData["password"])); err != nil {
 			c.String(404, "Wrong password.")
 			return
@@ -203,10 +220,12 @@ func Login(c *gin.Context) {
 		false,
 		true,
 	)
-	c.String(200, "Lobin Sucess!")
+	c.JSON(200, user)
 }
 
 func CheckUser(c *gin.Context) {
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	cookie, err := c.Cookie("jwt")
 	if err != nil {
 		c.String(404, "No token!")
@@ -232,6 +251,9 @@ func CheckUser(c *gin.Context) {
 }
 
 func Logout(c *gin.Context) {
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+	fmt.Println("logout?!")
 	c.SetCookie(
 		"jwt",
 		"",
