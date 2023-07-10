@@ -1,24 +1,33 @@
 package main
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"strconv"
 	"time"
 
+	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
+	_ "golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 var db *gorm.DB
 var err error
-
+var SecretKey *ecdsa.PrivateKey
 
 type User struct {
-	ID        uint `gorm:"primaryKey"`
+	ID        uint `json:"id" gorm:"primaryKey"`
 	FirstName string
 	LastName  string
-	Username  string
-	Password  string
+	Username  string `json:"username"`
+	Password  []byte `json:"-"`
 	Email     string
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -68,6 +77,10 @@ func init_db() {
 	db.AutoMigrate(&Room{})
 	db.AutoMigrate(&Booking{})
 
+	// Create all users
+	// db.Create(&User{ID: 1, Username: "user1", Password: "pass1"})
+	// db.Create(&User{ID: 2, Username: "user2", Password: "pass2"})
+
 	// Create all offices
 	db.Create(&Office{ID: 1, Name: "NewYork"})
 	db.Create(&Office{ID: 2, Name: "California"})
@@ -95,7 +108,9 @@ func init_db() {
 }
 
 func main() {
-	dsn := "host=localhost user=postgres password=postgres dbname=test port=5432 sslmode=disable TimeZone=Asia/Tehran"
+	SecretKey, _ = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+
+	dsn := "host=localhost user=postgres password=postgres dbname=test port=5435 sslmode=disable TimeZone=Asia/Tehran"
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
@@ -110,7 +125,12 @@ func main() {
 
 	r.GET("/office/", GetOffices)
 	r.GET("/room/", GetRooms)
-	
+
+	r.POST("/register/", Register)
+	r.POST("/login/", Login)
+	r.GET("/check_user/", CheckUser)
+	r.POST("/logout/", Logout)
+
 	r.GET("/user/", GetUsers)
 	r.GET("/user/:id", GetUser)
 	r.POST("/user", CreateUser)
@@ -123,6 +143,106 @@ func main() {
 	r.PUT("/booking/:id", UpdateBooking)
 	r.DELETE("/booking/:id", DeleteBooking)
 	r.Run(":8080")
+}
+
+func Register(c *gin.Context) {
+
+	var jsonData map[string]string
+	data, _ := ioutil.ReadAll(c.Request.Body)
+	if e := json.Unmarshal(data, &jsonData); e != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+	}
+	// TODO : handle bad request
+	password, _ := bcrypt.GenerateFromPassword([]byte(jsonData["password"]), 14)
+	user := User{
+		Username: jsonData["username"],
+		Password: password,
+	}
+	db.Create(&user)
+	c.JSON(200, user)
+}
+
+func Login(c *gin.Context) {
+	var jsonData map[string]string
+	data, _ := ioutil.ReadAll(c.Request.Body)
+	if e := json.Unmarshal(data, &jsonData); e != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+	}
+	var user User
+	if err := db.Where("username = ?", jsonData["username"]).First(&user).Error; err != nil {
+		c.String(404, "Login failed.")
+	} else {
+		fmt.Println(user.Username)
+		if err := bcrypt.CompareHashAndPassword(user.Password, []byte(jsonData["password"])); err != nil {
+			c.String(404, "Wrong password.")
+			return
+		}
+	}
+
+	claims := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.StandardClaims{
+		Issuer: strconv.Itoa(int(user.ID)),
+		// ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+	})
+
+	token, err := claims.SignedString(SecretKey)
+
+	if err != nil {
+		c.String(404, "Login Failed on token.")
+		fmt.Println(err)
+		return
+	}
+
+	c.SetCookie(
+		"jwt",
+		token,
+		time.Now().Hour()*24,
+		"/",
+		"localhost",
+		false,
+		true,
+	)
+	c.String(200, "Lobin Sucess!")
+}
+
+func CheckUser(c *gin.Context) {
+	cookie, err := c.Cookie("jwt")
+	if err != nil {
+		c.String(404, "No token!")
+		return
+	}
+	token, err := jwt.ParseWithClaims(cookie, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return SecretKey, nil
+	})
+
+	if err != nil {
+		c.String(404, "Wrong token!")
+		return
+	}
+	claims := token.Claims.(*jwt.StandardClaims)
+	var user User
+
+	if err := db.Where("id = ?", claims.Issuer).First(&user).Error; err != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+	} else {
+		c.JSON(200, user)
+	}
+}
+
+func Logout(c *gin.Context) {
+	c.SetCookie(
+		"jwt",
+		"",
+		0,
+		"/",
+		"localhost",
+		false,
+		true,
+	)
+	c.String(200, "Logout Success!")
+
 }
 
 func GetOffices(c *gin.Context) {
@@ -192,7 +312,6 @@ func DeleteUser(c *gin.Context) {
 	fmt.Println(d)
 	c.JSON(200, gin.H{"id #" + id: "deleted"})
 }
-
 
 func GetBookings(c *gin.Context) {
 	var bookings []Booking
