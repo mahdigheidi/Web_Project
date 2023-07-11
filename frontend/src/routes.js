@@ -19,8 +19,13 @@ import SignUpPage from './pages/SignUpPage';
 // ----------------------------------------------------------------------
 
 export default function Router(props) {
+  console.log(props);
   console.log("hi", props.uname)
   const routes = useRoutes([
+    // {
+    //   path: '/',
+      
+    // }
     {
       path: 'dashboard',
       element: <DashboardLayout Setuname={props.Setuname}/>,

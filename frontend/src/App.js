@@ -16,21 +16,16 @@ export default function App() {
   const [uname, Setuname] = useState('')
 
   useEffect(() => {
-    (
-      async () => {
-        const response = await fetch("http://localhost:8080/check_user/", {
+        fetch("http://localhost:8080/check_user/", {
           method: "GET", 
           credentials:'include',
           // mode:'no-cors'
-        })
-
-        const content = await response.json()
-
-        Setuname(content.username)
-
-      }
-    )()
-  })
+        }).then((response) => {
+          response.json().then((content) => {
+            Setuname(content.username)
+          })
+        }).catch((err) => window.alert(err.message));
+  },[]);
 
   return (
     <HelmetProvider>

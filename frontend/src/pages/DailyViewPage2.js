@@ -34,6 +34,7 @@ const DailyViewPage2 = () => {
   const [roomValue, setRoomValue] = useState('')
 
   const handleEventCreation = async (args) => {
+    console.log(args);
     const dp = calendarRef.current.control;
   //   const modal = await DayPilot.Modal.prompt("Book A New Meeting: Specify Room No", "Meeting Title");
     const modal = await DayPilot.Modal.form ([
@@ -76,7 +77,9 @@ const DailyViewPage2 = () => {
       office: modal.result.office,
       attendees: modal.result.attendees
     });
-    console.log("add Done")
+    console.log("add Done");
+
+    // send to backend - daily 
 
   }
 
