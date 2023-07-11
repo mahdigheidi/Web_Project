@@ -141,7 +141,7 @@ func init_db() {
 func main() {
 	SecretKey, _ = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 
-	dsn := "host=localhost user=postgres password=postgres dbname=test port=5435 sslmode=disable TimeZone=Asia/Tehran"
+	dsn := "host=localhost user=postgres password=postgres dbname=test port=5432 sslmode=disable TimeZone=Asia/Tehran"
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
