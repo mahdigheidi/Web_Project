@@ -320,6 +320,8 @@ func GetBookings(c *gin.Context) {
 }
 
 func GetRooms(c *gin.Context) {
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	var rooms []Room
 	if err := db.Find(&rooms).Error; err != nil {
 		c.AbortWithStatus(404)
@@ -330,6 +332,8 @@ func GetRooms(c *gin.Context) {
 }
 
 func GetOffices(c *gin.Context) {
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	var offices []Office
 	if err := db.Find(&offices).Error; err != nil {
 		c.AbortWithStatus(404)

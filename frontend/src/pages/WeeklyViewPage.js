@@ -26,20 +26,28 @@ function getRandomColor() {
   return event_colors[(Math.floor(Math.random() * event_colors.length))];
 }
 
-const Calendar = () => {
-  const [selectedOffice, setSelectedOffice] = useState("");
-  const [selectedRoom, setSelectedRoom] = useState("");
+const default_option = {id:-1, name:"All"}
 
-  const handleRoomSelectorChange = (event) => {
-    const selectedRoom = event.target.value;
-    console.log(selectedRoom);
-    setSelectedRoom(selectedRoom);
+const Calendar = () => {
+  const [selectedOffice, setSelectedOffice] = useState(default_option);
+  const [officeValue, setOfficeValue] = useState('');
+  const [selectedRoom, setSelectedRoom] = useState(default_option);
+  const [roomValue, setRoomValue] = useState('')
+
+  const handleRoomSelectorChange = value => {
+    setSelectedRoom(value);
   };
 
-  const handleOfficeSelectorChange = (event) => {
-    const selectedOffice = event.target.value;
-    console.log(selectedOffice);
-    setSelectedOffice(selectedOffice);
+  const handleRoomInputChange = value => {
+    setRoomValue(value);
+  };
+
+  const handleOfficeSelectorChange = value => {
+    setSelectedOffice(value);
+  };
+
+  const handleOfficeInputChange = value => {
+    setOfficeValue(value);
   };
 
   const handleEventCreation = async (args) => {
@@ -108,6 +116,37 @@ const Calendar = () => {
     const response = await fetch("http://localhost:8080/office/", {
       method: "GET", 
     })
+    const offices = await response.json()
+    const mappedOffices = offices.map(
+        (office) => {
+          return {
+            id: office.ID, 
+            name: office.Name
+          }
+        }
+    )
+    mappedOffices.push(default_option)
+    // console.log(mappedOffices)
+    return mappedOffices
+  }
+
+  const fetchRooms  = async (args) => {
+    const response = await fetch("http://localhost:8080/room/", {
+      method: "GET", 
+    })
+    const rooms = await response.json()
+    // console.log("got rooms: ", rooms)
+    const mappedRooms = rooms.map(
+        (room) => {
+          return {
+            id: room.id, 
+            name: room.name
+          }
+        }
+    )
+    mappedRooms.push(default_option)
+    // console.log(mappedRooms)
+    return mappedRooms
   }
 
   const OfficeSelect = () => {
@@ -124,20 +163,37 @@ const Calendar = () => {
         }}
         cacheOptions
         defaultOptions
-        value={selectedValue}
-        getOptionLabel={e => e.first_name + ' ' + e.last_name}
+        value={selectedOffice}
+        getOptionLabel={e => e.name}
         getOptionValue={e => e.id}
         loadOptions={fetchOffices}
-        onInputChange={handleInputChange}
-        onChange={handleChange}
+        onInputChange={handleOfficeInputChange}
+        onChange={handleOfficeSelectorChange}
       />
-      // <select  name="office" id="office" onChange={handleOfficeSelectorChange} value={selectedOffice}>
-      //     <option value="none">none</option>
-      //     <option value="Office 1">Office 1</option>
-      //     <option value="Office 2">Office 2</option>
-      //     <option value="Office 3">Office 3</option>
-      //     {/* Add more office options as needed */}
-      // </select>
+    )
+  }
+
+  const RoomSelect = () => {
+    return (
+
+      <AsyncSelect
+        style={{
+          marginLeft: '5px',
+          padding: '5px',
+          borderRadius: '5px',
+          border: '1px solid #ccc',
+          backgroundColor: '#f8f8f8',
+          color: '#333',
+        }}
+        cacheOptions
+        defaultOptions
+        value={selectedRoom}
+        getOptionLabel={e => e.name}
+        getOptionValue={e => e.id}
+        loadOptions={fetchRooms}
+        onInputChange={handleRoomInputChange}
+        onChange={handleRoomSelectorChange}
+      />
     )
   }
 
@@ -152,17 +208,16 @@ const Calendar = () => {
   });
   
 
-  useEffect(async () => {
+  useEffect(() => {
 
+  async function myfunc() {
     // get rooms from back
     const response = await fetch("http://localhost:8080/booking/", {
       method: "GET", 
     })
 
-    const content = await response.json()
-    console.log(content)
-    const events = content
-
+    const events = await response.json()
+    // console.log("got events:", events)
 
     // const events = [
     //   {
@@ -207,13 +262,14 @@ const Calendar = () => {
     // ];
 
     // TODO : filter events
-
+    
     const filteredEvents = events.filter(
         (event) =>
-          (selectedRoom === "" || event.RoomID === selectedRoom) // &&
-          (selectedOffice === "" || event.office === selectedOffice)
+          (selectedRoom === default_option || event.RoomID === selectedRoom.id)  &&
+          (selectedOffice === default_option || event.OfficeID === selectedOffice.id)
       );
-    const mappedEvents = events.map(
+    // console.log("filtered events:", filteredEvents)
+    const mappedEvents = filteredEvents.map(
         (event) => {
           return {
             id: event.ID, 
@@ -229,7 +285,7 @@ const Calendar = () => {
           }
         }
     )
-    console.log(mappedEvents)
+    // console.log(mappedEvents)
     // const filteredEvents = events.filter(event => event.room === selectedRoom && event.office === selectedOffice);
     // console.log(selectedRoom.toString());
     // console.log(selectedOffice.toString());
@@ -244,7 +300,10 @@ const Calendar = () => {
     const startDate = year + dash + month + dash + day;
 
     calendarRef.current.control.update({startDate, events: mappedEvents});
+      }
+      myfunc();
   }, [selectedRoom, selectedOffice]);
+  // }, [selectedRoom, selectedOffice]);
 
   return (
     <>
@@ -253,20 +312,7 @@ const Calendar = () => {
       <OfficeSelect />
     </label>
       <label htmlFor="btn-check5" className="btn btn-primary-border">Select Room: 
-      <select style={{
-        marginLeft: '5px',
-        padding: '5px',
-        borderRadius: '5px',
-        border: '1px solid #ccc',
-        backgroundColor: '#f8f8f8',
-        color: '#333',
-      }} name="room" id="room" onChange={handleRoomSelectorChange} value={selectedRoom}>
-        <option value="none">none</option>
-        <option value="Room 1">Room 1</option>
-        <option value="Room 2">Room 2</option>
-        <option value="Room 3">Room 3</option>
-        {/* Add more room options as needed */}
-      </select>
+      <RoomSelect />
       </label>
     </div>
     <div style={styles.wrap}>
