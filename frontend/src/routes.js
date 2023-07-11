@@ -31,10 +31,10 @@ export default function Router(props) {
       element: <DashboardLayout Setuname={props.Setuname}/>,
       children: [
         { element: <Navigate to="/login" />, index: true },
-        { path: 'app', element: <DashboardAppPage /> },
+        // { path: 'app', element: <DashboardAppPage /> },
         { path: 'user', element: <UserPage /> },
-        { path: 'products', element: <ProductsPage /> },
-        { path: 'blog', element: <BlogPage /> },
+        // { path: 'products', element: <ProductsPage /> },
+        // { path: 'blog', element: <BlogPage /> },
         { path: 'daily_view', element: <DailyViewPage2 />},
         { path: 'weekly_view', element: <WeeklyViewPage />},
         { path: 'monthly_view', element: <MonthlyViewPage />},
