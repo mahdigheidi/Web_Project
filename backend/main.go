@@ -13,6 +13,7 @@ import (
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 	_ "golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
@@ -58,8 +59,8 @@ type Booking struct {
 	Title     string
 	UserID    uint
 	User      User
-	Start     time.Time
-	End       time.Time
+	Starts    pq.StringArray `gorm:"type:text[]"`
+	Ends      pq.StringArray `gorm:"type:text[]"`
 	RoomID    uint
 	Room      Room
 	OfficeID  uint
@@ -114,27 +115,27 @@ func init_db() {
 	db.Create(&Room{ID: 13, Name: "Toronto Multi A", Capacity: 6, OfficeID: 4})
 	db.Create(&Room{ID: 14, Name: "Toronto Conference", Capacity: 12, OfficeID: 4})
 
-	db.Create(&Booking{
-		Title:  "Backend meeting",
-		UserID: 4,
-		Start:  time.Now(),
-		End:    time.Now().Add(time.Hour * 3),
-		RoomID: 1,
-	})
-	db.Create(&Booking{
-		Title:  "Frontend meeting",
-		UserID: 5,
-		Start:  time.Now(),
-		End:    time.Now().Add(time.Hour * 3),
-		RoomID: 1,
-	})
-	db.Create(&Booking{
-		Title:  "HR meeting",
-		UserID: 4,
-		Start:  time.Now(),
-		End:    time.Now().Add(time.Hour * 3),
-		RoomID: 1,
-	})
+	// db.Create(&Booking{
+	// 	Title:  "Backend meeting",
+	// 	UserID: 4,
+	// 	Start:  time.Now(),
+	// 	End:    time.Now().Add(time.Hour * 3),
+	// 	RoomID: 1,
+	// })
+	// db.Create(&Booking{
+	// 	Title:  "Frontend meeting",
+	// 	UserID: 5,
+	// 	Start:  time.Now(),
+	// 	End:    time.Now().Add(time.Hour * 3),
+	// 	RoomID: 1,
+	// })
+	// db.Create(&Booking{
+	// 	Title:  "HR meeting",
+	// 	UserID: 4,
+	// 	Start:  time.Now(),
+	// 	End:    time.Now().Add(time.Hour * 3),
+	// 	RoomID: 1,
+	// })
 }
 
 func main() {
@@ -170,6 +171,7 @@ func main() {
 	r.GET("/booking/", GetBookings)
 	r.GET("/booking/:id", GetBooking)
 	r.POST("/add_booking", CreateBooking)
+	r.POST("/add_week_booking", CreateWeekBooking)
 	r.PUT("/booking/:id", UpdateBooking)
 	r.DELETE("/booking/:id", DeleteBooking)
 
@@ -314,7 +316,6 @@ func GetBookings(c *gin.Context) {
 		c.AbortWithStatus(404)
 		fmt.Println(err)
 	} else {
-
 		c.JSON(200, bookings)
 	}
 }
@@ -445,12 +446,16 @@ func CreateBooking(c *gin.Context) {
 		c.String(404, "Room not found")
 		return
 	}
+	// days := []BookingDays{{startTime}}
+	// days := []time.Time{startTime}
+	starts := []string{startTime.Format(time.RFC3339)}
+	ends := []string{endTime.Format(time.RFC3339)}
 	var booking = Booking{
 		RoomID:    uint(roomId),
 		OfficeID:  room.OfficeID,
 		UserID:    (*user).ID,
-		Start:     startTime,
-		End:       endTime,
+		Starts:    starts,
+		Ends:      ends,
 		Attendees: uint(attendees),
 		Title:     jsonData["Title"],
 	}
@@ -461,6 +466,103 @@ func CreateBooking(c *gin.Context) {
 	c.JSON(200, booking)
 }
 
+// func add_days(day time.Time) {
+// 	id := db.Create(&BookingDays{day})
+// 	fmt.Println(id)
+// }
+
+func CreateWeekBooking(c *gin.Context) {
+	var user *User
+	if user, err = GetLoginnedUser(c); err != nil {
+		fmt.Println("user not found")
+		return
+	}
+
+	var jsonData map[string]string
+	data, _ := ioutil.ReadAll(c.Request.Body)
+	if e := json.Unmarshal(data, &jsonData); e != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+	}
+
+	startDay, err := ParseTime(jsonData["start_day"])
+	if err != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+		return
+	}
+	endDay, err := ParseTime(jsonData["end_day"])
+	if err != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(endDay)
+	startHour, err := ParseHour(jsonData["start_hour"])
+	if err != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+		return
+	}
+	endHour, err := ParseHour(jsonData["end_hour"])
+	if err != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+		return
+	}
+	attendees, err := strconv.Atoi(jsonData["Attendees"])
+	if err != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+		return
+	}
+	roomId, err := strconv.Atoi(jsonData["RoomID"])
+	if err != nil {
+		c.AbortWithStatus(404)
+		fmt.Println(err)
+		return
+	}
+	var room Room
+	if err := db.Where("id = ?", roomId).First(&room).Error; err != nil {
+		c.String(404, "Room not found")
+		return
+	}
+	// fmt.Println("hour", startHour.Hour(), endHour.Hour())
+	// fmt.Println("hour", startHour, endHour)
+	var bookings []Booking
+	// days := []BookingDays{{startDay}}
+	// days := []time.Time{startDay}
+	days_count := endDay.Sub(startDay).Hours() / 24
+	start_time := startDay.Add(startHour)
+	end_time := startDay.Add(endHour)
+	starts := []string{}
+	ends := []string{}
+	// // fmt.Println("start", start_time)
+	// // fmt.Println("end", end_time)
+	for i := 0; i < int(days_count); i++ {
+		starts = append(starts, start_time.Format(time.RFC3339))
+		ends = append(ends, end_time.Format(time.RFC3339))
+
+		start_time = start_time.Add(time.Hour * 24)
+		end_time = end_time.Add(time.Hour * 24)
+		// days = append(days, BookingDays{startDay})
+		// fmt.Println("booook!")
+	}
+
+	var booking = Booking{
+		RoomID:    uint(roomId),
+		OfficeID:  room.OfficeID,
+		UserID:    (*user).ID,
+		Starts:    starts,
+		Ends:      ends,
+		Attendees: uint(attendees),
+		Title:     jsonData["Title"],
+	}
+	db.Create(&booking)
+
+	c.JSON(200, bookings)
+}
+
 func ParseTime(t string) (time.Time, error) {
 	time_layout := (time.RFC3339)[:19]
 	pTime, err := time.Parse(time_layout, t)
@@ -469,6 +571,17 @@ func ParseTime(t string) (time.Time, error) {
 		return time.Now(), err
 	}
 	return pTime, nil
+}
+
+func ParseHour(t string) (time.Duration, error) {
+	time_layout := (time.TimeOnly)[:5]
+	pTime, err := time.Parse(time_layout, t)
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	}
+	d := time.Duration(pTime.Hour()*int(time.Hour) + pTime.Minute()*int(time.Minute))
+	return d, nil
 }
 
 func UpdateBooking(c *gin.Context) {

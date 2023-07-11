@@ -3,6 +3,7 @@ import AsyncSelect from 'react-select/async';
 import { DayPilot, DayPilotCalendar, DayPilotNavigator } from "@daypilot/daypilot-lite-react";
 import "./WeekStyle.css";
 import { indexOf } from 'lodash';
+import { OfficeSelect, RoomSelect } from './Selectors'
 
 const styles = {
   wrap: {
@@ -33,22 +34,6 @@ const Calendar = () => {
   const [officeValue, setOfficeValue] = useState('');
   const [selectedRoom, setSelectedRoom] = useState(default_option);
   const [roomValue, setRoomValue] = useState('')
-
-  const handleRoomSelectorChange = value => {
-    setSelectedRoom(value);
-  };
-
-  const handleRoomInputChange = value => {
-    setRoomValue(value);
-  };
-
-  const handleOfficeSelectorChange = value => {
-    setSelectedOffice(value);
-  };
-
-  const handleOfficeInputChange = value => {
-    setOfficeValue(value);
-  };
 
   const handleEventCreation = async (args) => {
     const dp = calendarRef.current.control;
@@ -112,91 +97,6 @@ const Calendar = () => {
     dp.events.update(e);
   }
 
-  const fetchOffices  = async (args) => {
-    const response = await fetch("http://localhost:8080/office/", {
-      method: "GET", 
-    })
-    const offices = await response.json()
-    const mappedOffices = offices.map(
-        (office) => {
-          return {
-            id: office.ID, 
-            name: office.Name
-          }
-        }
-    )
-    mappedOffices.push(default_option)
-    // console.log(mappedOffices)
-    return mappedOffices
-  }
-
-  const fetchRooms  = async (args) => {
-    const response = await fetch("http://localhost:8080/room/", {
-      method: "GET", 
-    })
-    const rooms = await response.json()
-    // console.log("got rooms: ", rooms)
-    const mappedRooms = rooms.map(
-        (room) => {
-          return {
-            id: room.id, 
-            name: room.name
-          }
-        }
-    )
-    mappedRooms.push(default_option)
-    // console.log(mappedRooms)
-    return mappedRooms
-  }
-
-  const OfficeSelect = () => {
-    return (
-
-      <AsyncSelect
-        style={{
-          marginLeft: '5px',
-          padding: '5px',
-          borderRadius: '5px',
-          border: '1px solid #ccc',
-          backgroundColor: '#f8f8f8',
-          color: '#333',
-        }}
-        cacheOptions
-        defaultOptions
-        value={selectedOffice}
-        getOptionLabel={e => e.name}
-        getOptionValue={e => e.id}
-        loadOptions={fetchOffices}
-        onInputChange={handleOfficeInputChange}
-        onChange={handleOfficeSelectorChange}
-      />
-    )
-  }
-
-  const RoomSelect = () => {
-    return (
-
-      <AsyncSelect
-        style={{
-          marginLeft: '5px',
-          padding: '5px',
-          borderRadius: '5px',
-          border: '1px solid #ccc',
-          backgroundColor: '#f8f8f8',
-          color: '#333',
-        }}
-        cacheOptions
-        defaultOptions
-        value={selectedRoom}
-        getOptionLabel={e => e.name}
-        getOptionValue={e => e.id}
-        loadOptions={fetchRooms}
-        onInputChange={handleRoomInputChange}
-        onChange={handleRoomSelectorChange}
-      />
-    )
-  }
-
   const calendarRef = useRef();
   const [calendarConfig, setCalendarConfig] = useState({
     viewType: "Week",
@@ -219,59 +119,20 @@ const Calendar = () => {
     const events = await response.json()
     // console.log("got events:", events)
 
-    // const events = [
-    //   {
-    //     id: 1,
-    //     text: "Meet 1",
-    //     room: "Room 1",
-    //     office: "Office 1",
-    //     attendees: "2",
-    //     start: "2023-07-10T10:30:00",
-    //     end: "2023-07-10T13:00:00"
-    //   },
-    //   {
-    //     id: 2,
-    //     text: "Meet 2",
-    //     room: "Room 2",
-    //     office: "Office 1",
-    //     attendees: "3",
-    //     start: "2023-07-11T09:30:00",
-    //     end: "2023-07-11T11:30:00",
-    //     backColor: "#6aa84f"
-    //   },
-    //   {
-    //     id: 3,
-    //     text: "Meet 3",
-    //     room: "Room 3",
-    //     office: "Office 2",
-    //     attendees: "4",
-    //     start: "2023-07-11T12:00:00",
-    //     end: "2023-07-11T15:00:00",
-    //     backColor: "#f1c232"
-    //   },
-    //   {
-    //     id: 4,
-    //     text: "Meet 4",
-    //     room: "Room 4",
-    //     office: "Office 3",
-    //     attendees: "6",
-    //     start: "2023-07-12T11:30:00",
-    //     end: "2023-07-12T14:30:00",
-    //     backColor: "#cc4125"
-    //   },
-    // ];
-
-    // TODO : filter events
-    
     const filteredEvents = events.filter(
         (event) =>
           (selectedRoom === default_option || event.RoomID === selectedRoom.id)  &&
           (selectedOffice === default_option || event.OfficeID === selectedOffice.id)
       );
     // console.log("filtered events:", filteredEvents)
-    const mappedEvents = filteredEvents.map(
-        (event) => {
-          return {
+    // const mappedEvents = filteredEvents.map(
+        // (event) => {
+    const mappedEvents = []
+    for (let i in filteredEvents) {
+      let event = filteredEvents[i]
+      const new_events = []
+      for (let i = 0; i < event.Starts.length; i++) {
+        mappedEvents.push({
             id: event.ID, 
             text: event.Title,
             room: event.RoomID,
@@ -279,13 +140,14 @@ const Calendar = () => {
             attendees: event.Attendees,
             // start: (event.Start).substring(0, (event.Start).indexOf(".")),
             // end: (event.End).substring(0, (event.End).indexOf(".")),
-            start: (event.Start),
-            end: (event.End),
-            backColor: getRandomColor()
-          }
-        }
-    )
-    // console.log(mappedEvents)
+            start: (event.Starts)[i],
+            end: (event.Ends)[i],
+            backColor: getRandomColor(),
+        });
+      }
+    }
+
+    console.log(mappedEvents)
     // const filteredEvents = events.filter(event => event.room === selectedRoom && event.office === selectedOffice);
     // console.log(selectedRoom.toString());
     // console.log(selectedOffice.toString());
@@ -309,11 +171,11 @@ const Calendar = () => {
     <>
     <div>
     <label htmlFor="btn-check5" className="btn btn-primary-border" >Select Office: 
-      <OfficeSelect />
+      <OfficeSelect selectedOffice={selectedOffice} setSelectedOffice={setSelectedOffice} officeValue={officeValue} setOfficeValue={setOfficeValue}/>
     </label>
-      <label htmlFor="btn-check5" className="btn btn-primary-border">Select Room: 
-      <RoomSelect />
-      </label>
+    <label htmlFor="btn-check5" className="btn btn-primary-border">Select Room: 
+      <RoomSelect selectedRoom={selectedRoom} setSelectedRoom={setSelectedRoom} roomValue={roomValue} setRoomValue={setRoomValue}/>
+    </label>
     </div>
     <div style={styles.wrap}>
       <div style={styles.left}>
