@@ -22,7 +22,7 @@ services:
   
   frontend:
     build:
-      context: ./frontend_backup/
+      context: ./frontend/
     depends_on:
       - backend
     ports:
