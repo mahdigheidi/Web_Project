@@ -34,35 +34,47 @@ const DailyViewPage2 = () => {
   const [roomValue, setRoomValue] = useState('')
 
   const handleEventCreation = async (args) => {
-    console.log(args);
     const dp = calendarRef.current.control;
-  //   const modal = await DayPilot.Modal.prompt("Book A New Meeting: Specify Room No", "Meeting Title");
-    const modal = await DayPilot.Modal.form ([
-      {name: "title", id:"title", type:"text"},
-      // {name: "office", id:"office", type:"text"},
-      // {name: "room", id:"room", type:"text"},
-      {name: "attendees", id:"attendees", type:"text"},
+    let mod = await args.resource[0]
+    let modal
+    let roomid 
+    if (mod == "r") {
+      roomid = await args.resource.substring(1)
+      modal = await DayPilot.Modal.form ([
+        {name: "title", id:"title", type:"text"},
+        // {name: "office", id:"office", type:"text"},
+        // {name: "room", id:"room", type:"text"},
+        {name: "attendees", id:"attendees", type:"text"},  
+      ]);
+    } else {
+      modal = await DayPilot.Modal.form ([
+        {name: "title", id:"title", type:"text"},
+        // {name: "office", id:"office", type:"text"},
+        {name: "room", id:"room", type:"text"},
+        {name: "attendees", id:"attendees", type:"text"},
+      ]);
+      roomid = modal.room  
+    }
 
-    ]);
     console.log("AAA", args, modal.result);
 
-    // const response = await fetch("http://localhost:8080/add_booking/", {
-    //   method: "POST", 
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'Access-Control-Allow-Credintials': 'true',
-    //     'Access-Control-Allow-Origin': '*'
-    //   },
-    //   mode:'no-cors',
-    //   credentials:'include',
-    //   body: JSON.stringify({
-    //     "Start": args.start,
-    //     "End": args.end,
-    //     "Title": modal.result.title,
-    //     "RoomID": modal.result.room,
-    //     "Attendees": modal.result.attendees,
-    //   })
-    // })
+    const response = await fetch("http://localhost:8080/add_booking/", {
+      method: "POST", 
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Credintials': 'true',
+        'Access-Control-Allow-Origin': '*'
+      },
+      mode:'no-cors',
+      credentials:'include',
+      body: JSON.stringify({
+        "Start": args.start,
+        "End": args.end,
+        "Title": modal.result.title,
+        "RoomID": roomid,
+        "Attendees": modal.result.attendees,
+      })
+    })
         
     dp.clearSelection();
     if (!modal.result) { return; }
@@ -77,9 +89,7 @@ const DailyViewPage2 = () => {
       office: modal.result.office,
       attendees: modal.result.attendees
     });
-    console.log("add Done");
-
-    // send to backend - daily 
+    console.log("add Done")
 
   }
 
@@ -168,8 +178,9 @@ const DailyViewPage2 = () => {
     const resources = []
     for (let i in offices) {
       let office = offices[i]
+      let id = "o" + office.ID
       resources.push({
-          id: office.ID, 
+          id: id, 
           name: office.Name,
           expanded: false,
           children: [],
@@ -181,12 +192,16 @@ const DailyViewPage2 = () => {
     const rooms = await response.json()
     let resource = 5
     for (let i in rooms) {
-      let room = rooms[i]
+      let room = rooms[i];
+      let id = "r" + room.id
       resource = resources.find(
-        (r) => (r.id === room.office_id)
+        (r) => {
+          let id = "o" + room.office_id
+          return id === r.id
+        }
       );
       (resource.children).push({
-          id: room.id, 
+          id: id, 
           name: room.name,
       });
   }
@@ -286,6 +301,7 @@ const DailyViewPage2 = () => {
       for (let i in events) {
         let event = events[i]
         for (let j = 0; j < event.Starts.length; j++) {
+          let rid = "r" + event.RoomID
           mappedEvents.push({
               id: id, 
               text: event.Title,
@@ -296,9 +312,24 @@ const DailyViewPage2 = () => {
               start: (event.Starts)[j],
               end: (event.Ends)[j],
               backColor: getRandomColor(),
-              resource: event.OfficeID,
+              resource: rid,
               office: event.OfficeID,
           });
+          id++
+          rid = "o" + event.OfficeID
+          mappedEvents.push({
+            id: id, 
+            text: event.Title,
+            room: event.RoomID,
+            attendees: event.Attendees,
+            // start: (event.Start).substring(0, (event.Start).indexOf(".")),
+            // end: (event.End).substring(0, (event.End).indexOf(".")),
+            start: (event.Starts)[j],
+            end: (event.Ends)[j],
+            backColor: getRandomColor(),
+            resource: rid,
+            office: event.OfficeID,
+        });
           id++
         }
       }
