@@ -27,7 +27,26 @@ const default_option = {id:-1, name:"All"}
 
 const DailyViewPage2 = () => {
   const calendarRef = useRef();
-
+  const fetchRooms  = async (officeid) => {
+    const response = await fetch("http://localhost:8080/room/", {
+    method: "GET", 
+    })
+    const rooms = await response.json()
+    const frooms = rooms.filter(
+      (r) => {
+        return r.office_id == officeid
+      }
+    )
+    const mappedRooms = frooms.map(
+        (room) => {
+        return {
+            id: room.id, 
+            name: room.name
+        }
+        }
+    )
+    return mappedRooms
+}
   const [selectedOffice, setSelectedOffice] = useState(default_option);
   const [officeValue, setOfficeValue] = useState('');
   const [selectedRoom, setSelectedRoom] = useState(default_option);
@@ -42,18 +61,17 @@ const DailyViewPage2 = () => {
       roomid = await args.resource.substring(1)
       modal = await DayPilot.Modal.form ([
         {name: "title", id:"title", type:"text"},
-        // {name: "office", id:"office", type:"text"},
-        // {name: "room", id:"room", type:"text"},
         {name: "attendees", id:"attendees", type:"text"},  
       ]);
     } else {
+      const officeid = await args.resource.substring(1)
+      const rooms = await fetchRooms(officeid);
       modal = await DayPilot.Modal.form ([
         {name: "title", id:"title", type:"text"},
-        // {name: "office", id:"office", type:"text"},
-        {name: "room", id:"room", type:"text"},
+        {name: "room", id:"room", type:"select", options:rooms},
         {name: "attendees", id:"attendees", type:"text"},
       ]);
-      roomid = modal.room  
+      roomid = String(modal.result.room)  
     }
 
     console.log("AAA", args, modal.result);

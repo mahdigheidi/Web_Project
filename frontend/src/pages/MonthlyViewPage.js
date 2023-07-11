@@ -36,13 +36,30 @@ const MonthlyCalendar = (props) => {
   const [selectedRoom, setSelectedRoom] = useState(default_option);
   const [roomValue, setRoomValue] = useState('')
 
+  const fetchRooms  = async (args) => {
+    const response = await fetch("http://localhost:8080/room/", {
+    method: "GET", 
+    })
+    const rooms = await response.json()
+    const mappedRooms = rooms.map(
+        (room) => {
+        return {
+            id: room.id, 
+            name: room.name
+        }
+        }
+    )
+    return mappedRooms
+}
+
   const handleEventCreation = async (args) => {
+    const rooms = await fetchRooms();
     const dp = calendarRef.current.control;
   //   const modal = await DayPilot.Modal.prompt("Book A New Meeting: Specify Room No", "Meeting Title");
     const modal = await DayPilot.Modal.form ([
       {name: "title", id:"title", type:"text"},
-      {name: "office", id:"office", type:"text"},
-      {name: "room", id:"room", type:"text"},
+      // {name: "office", id:"office", type:"text"},
+      {name: "room", id:"room", type:"select", options:rooms},
       {name: "attendees", id:"attendees", type:"text"},
       {name: "start_hour", id:"start_hour", type:"text"},
       {name: "end_hour", id:"end_hour", type:"text"},
@@ -76,7 +93,7 @@ const MonthlyCalendar = (props) => {
         "start_day": args.start,
         "end_day": args.end,
         "Title": modal.result.title,
-        "RoomID": modal.result.room,
+        "RoomID": String(modal.result.room),
         "Attendees": modal.result.attendees,
         "start_hour": modal.result.start_hour,
         "end_hour": modal.result.end_hour,

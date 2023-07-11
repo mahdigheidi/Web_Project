@@ -35,15 +35,48 @@ const Calendar = () => {
   const [selectedRoom, setSelectedRoom] = useState(default_option);
   const [roomValue, setRoomValue] = useState('')
 
+  const fetchOffices  = async (args) => {
+    const response = await fetch("http://localhost:8080/office/", {
+    method: "GET", 
+    })
+    const offices = await response.json()
+    const mappedOffices = offices.map(
+        (office) => {
+        return {
+            id: office.ID, 
+            name: office.Name
+        }
+        }
+    )
+    return mappedOffices
+  }
+
+  const fetchRooms  = async (args) => {
+    const response = await fetch("http://localhost:8080/room/", {
+    method: "GET", 
+    })
+    const rooms = await response.json()
+    const mappedRooms = rooms.map(
+        (room) => {
+        return {
+            id: room.id, 
+            name: room.name
+        }
+        }
+    )
+    return mappedRooms
+}
+
   const handleEventCreation = async (args) => {
+    const offices = await fetchOffices();
+    const rooms = await fetchRooms();
     const dp = calendarRef.current.control;
-  //   const modal = await DayPilot.Modal.prompt("Book A New Meeting: Specify Room No", "Meeting Title");
-    const modal = await DayPilot.Modal.form({
-      title: "Meeting title",
-      office: "",
-      room: "",
-      attendees: "",
-    });
+    const modal = await DayPilot.Modal.form([
+      {name: "title", id:"title", type:"text"},
+      // {name: "office", id:"office", type:"select", options:offices},
+      {name: "room", id:"room", type:"select", options:rooms},
+      {name: "attendees", id:"attendees", type:"text"},
+    ]);
 
     const response = await fetch("http://localhost:8080/add_booking/", {
       method: "POST", 
@@ -58,7 +91,7 @@ const Calendar = () => {
         "Start": args.start,
         "End": args.end,
         "Title": modal.result.title,
-        "RoomID": modal.result.room,
+        "RoomID": String(modal.result.room),
         "Attendees": modal.result.attendees,
       })
     })
@@ -72,7 +105,7 @@ const Calendar = () => {
       id: DayPilot.guid(),
       text: modal.result.title,
       room: modal.result.room,
-      office: modal.result.office,
+      // office: modal.result.office,
       attendees: modal.result.attendees
     });
   }
@@ -96,6 +129,7 @@ const Calendar = () => {
     e.data.attendees = modal.result.attendees;
     dp.events.update(e);
   }
+
 
   const calendarRef = useRef();
   const [calendarConfig, setCalendarConfig] = useState({
