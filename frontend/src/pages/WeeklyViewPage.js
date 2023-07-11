@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Cookies from 'js-cookie';
 import AsyncSelect from 'react-select/async';
 import { DayPilot, DayPilotCalendar, DayPilotNavigator } from "@daypilot/daypilot-lite-react";
 import "./WeekStyle.css";
@@ -39,6 +40,11 @@ const Calendar = () => {
 
   const fetchOffices  = async (args) => {
     const response = await fetch("http://localhost:8080/office/", {
+    credentials: "same-origin",
+    headers: {
+      "token": Cookies.get('jwt'),
+    },
+    credentials: 'include',
     method: "GET", 
     })
     const offices = await response.json()
@@ -56,6 +62,7 @@ const Calendar = () => {
   const fetchRooms  = async (args) => {
     const response = await fetch("http://localhost:8080/room/", {
     method: "GET", 
+    credentials:'include',
     })
     const rooms = await response.json()
     const mappedRooms = rooms.map(

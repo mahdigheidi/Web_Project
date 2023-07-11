@@ -1,11 +1,24 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
 import './styles.css';
 import account from '../../../_mock/account';
+
 // ----------------------------------------------------------------------
 
 export default function LoginForm(props) {
   const navigate = useNavigate();
+
+  
+  // useEffect(() => {
+  //   const token = Cookies.get('jwt');
+
+  //   console.log({token});
+  //   if (token && token.length > 0) {
+
+  //     navigate('/dashboard/weekly_view')
+  //   }
+  // }, [])
 
   // const [showPassword, setShowPassword] = useState(false);
 
@@ -16,6 +29,7 @@ export default function LoginForm(props) {
 
   const [errorMessages, setErrorMessages] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+
 
   const database = [
     {
@@ -42,12 +56,12 @@ export default function LoginForm(props) {
     event.preventDefault();
 
     const response = await fetch("http://localhost:8080/login/", {
-      method: "POST", 
+      method: "POST",
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Credintials': 'true'
       },
-      credentials:'include',
+      credentials: 'include',
       body: JSON.stringify({
         "username": uname,
         "password": pass
@@ -86,14 +100,14 @@ export default function LoginForm(props) {
     <div className="form">
       <form onSubmit={handleSubmit}>
         <div className="input-container">
-        <label htmlFor="btn-check5" className="btn btn-primary-border">
+          <label htmlFor="btn-check5" className="btn btn-primary-border">
             <input placeholder='email' type="text" name="uname" required
               onChange={e => setName(e.target.value)} />
           </label>
           {renderErrorMessage('uname')}
         </div>
         <div className="input-container">
-        <label htmlFor="btn-check5" className="btn btn-primary-border">
+          <label htmlFor="btn-check5" className="btn btn-primary-border">
             <input placeholder="password" type="password" name="pass" required
               onChange={e => setPassword(e.target.value)} />
           </label>
@@ -107,7 +121,7 @@ export default function LoginForm(props) {
   );
 
   return (
-    
+
     <div className="app">
       <div className="login-form">
         <div className="title">Sign In</div>

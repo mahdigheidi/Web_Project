@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 // @mui
 import { styled } from '@mui/material/styles';
 import { Link, Container, Typography, Divider, Stack, Button } from '@mui/material';
@@ -42,6 +42,7 @@ const StyledContent = styled('div')(({ theme }) => ({
 // ----------------------------------------------------------------------
 
 export default function LoginPage(props) {
+
   const mdUp = useResponsive('up', 'md');
   const navigate = useNavigate(); // Add the useNavigate hook
 
@@ -49,10 +50,15 @@ export default function LoginPage(props) {
     navigate('/sign_up'); // Redirect to the sign-up page
   };
 
+  // if (props.uname !== undefined) {
+  //   console.log('prop name shenakhte na shode')
+  //   return <Navigate to="/dashboard/weekly_view" />
+  // }
+
   return (
     <>
       <Helmet>
-        <title> Login | YAROOMS</title>
+        <title> Login | MeetingMate </title>
       </Helmet>
 
       <StyledRoot>
@@ -76,7 +82,7 @@ export default function LoginPage(props) {
         <Container maxWidth="sm">
           <StyledContent className='app'>
             <Typography variant="h4" gutterBottom>
-              Sign in to YAROOMS
+              Sign in to MeetingMate
             </Typography>
 
             <Typography variant="body2" sx={{ mb: 5 }}>

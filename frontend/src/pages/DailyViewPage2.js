@@ -63,16 +63,16 @@ const DailyViewPage2 = () => {
     if (mod == "r") {
       roomid = await args.resource.substring(1)
       modal = await DayPilot.Modal.form ([
-        {name: "title", id:"title", type:"text"},
-        {name: "attendees", id:"attendees", type:"text"},  
+        {name: "Title", id:"title", type:"text"},
+        {name: "Attendees", id:"attendees", type:"text"},  
       ]);
     } else {
       const officeid = await args.resource.substring(1)
       const rooms = await fetchRooms(officeid);
       modal = await DayPilot.Modal.form ([
-        {name: "title", id:"title", type:"text"},
-        {name: "room", id:"room", type:"select", options:rooms},
-        {name: "attendees", id:"attendees", type:"text"},
+        {name: "Title", id:"title", type:"text"},
+        {name: "Room", id:"room", type:"text"},
+        {name: "Attendees", id:"attendees", type:"text"},
       ]);
       roomid = String(modal.result.room)  
     }
@@ -117,7 +117,7 @@ const DailyViewPage2 = () => {
   const handleEventEdition  = async (args) => {
     // TODO
     const dp = calendarRef.current.control;
-  //   const modal = await DayPilot.Modal.prompt("Update Meeting Details:", args.e.text());
+    //  const modal = await DayPilot.Modal.prompt("Update Meeting Details:", args.e.text());
     const modal = await DayPilot.Modal.form({
         // "Update Meeting Details:",
         title: args.e.text(),

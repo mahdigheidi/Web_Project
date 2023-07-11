@@ -146,11 +146,12 @@ func main() {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	var offices []Office
-	db.Raw("SELECT * FROM offices").Scan(&offices)
-	if len(offices) == 0 {
-		init_db()
-	}
+	init_db()
+	// var offices []Office
+	// db.Raw("SELECT * FROM offices").Scan(&offices)
+	// if len(offices) == 0 {
+	// 	init_db()
+	// }
 
 	r := gin.Default()
 
@@ -207,6 +208,19 @@ func Register(c *gin.Context) {
 	c.JSON(200, user)
 }
 
+func JWtMiddleware(c *gin.Context) {
+	fmt.Print(c)
+	fmt.Println(c.Cookie("jwt"))
+	_, err := c.Cookie("jwt")
+	fmt.Println(err)
+	if err != nil {
+		c.JSON(401, "UnAuthorized")
+		return
+	}
+
+	c.Next()
+}
+
 func Login(c *gin.Context) {
 	// fmt.Println(c.Request.Header)
 	// fmt.Println(c.res)
@@ -248,7 +262,7 @@ func Login(c *gin.Context) {
 		"/",
 		"localhost",
 		false,
-		true,
+		false,
 	)
 	c.JSON(200, user)
 }
@@ -321,6 +335,7 @@ func GetBookings(c *gin.Context) {
 }
 
 func GetRooms(c *gin.Context) {
+	fmt.Print(c.GetHeader("token"))
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	var rooms []Room

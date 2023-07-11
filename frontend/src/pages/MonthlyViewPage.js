@@ -55,12 +55,12 @@ const MonthlyCalendar = (props) => {
     const rooms = await fetchRooms();
     const dp = calendarRef.current.control;
     const modal = await DayPilot.Modal.form ([
-      {name: "title", id:"title", type:"text"},
+      {name: "Title", id:"title", type:"text"},
       // {name: "office", id:"office", type:"text"},
-      {name: "room", id:"room", type:"select", options:rooms},
-      {name: "attendees", id:"attendees", type:"text"},
-      {name: "start_hour", id:"start_hour", type:"text"},
-      {name: "end_hour", id:"end_hour", type:"text"},
+      {name: "Room", id:"room", type:"select", options:rooms},
+      {name: "Attendees", id:"attendees", type:"text"},
+      {name: "Start hour", id:"start_hour", type:"text"},
+      {name: "End hour", id:"end_hour", type:"text"},
     ]);
     console.log(modal.result.end_hour)
 
