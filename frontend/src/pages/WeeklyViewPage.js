@@ -3,6 +3,8 @@ import AsyncSelect from 'react-select/async';
 import { DayPilot, DayPilotCalendar, DayPilotNavigator } from "@daypilot/daypilot-lite-react";
 import "./WeekStyle.css";
 import { indexOf } from 'lodash';
+import { Helmet } from 'react-helmet-async';
+import { Grid, Container, Typography, Item } from '@mui/material';
 import { OfficeSelect, RoomSelect } from './Selectors'
 
 const styles = {
@@ -151,16 +153,11 @@ const Calendar = () => {
     })
 
     const events = await response.json()
-    // console.log("got events:", events)
-
     const filteredEvents = events.filter(
         (event) =>
           (selectedRoom === default_option || event.RoomID === selectedRoom.id)  &&
           (selectedOffice === default_option || event.OfficeID === selectedOffice.id)
       );
-    // console.log("filtered events:", filteredEvents)
-    // const mappedEvents = filteredEvents.map(
-        // (event) => {
     const mappedEvents = []
     for (let i in filteredEvents) {
       let event = filteredEvents[i]
@@ -171,21 +168,12 @@ const Calendar = () => {
             room: event.RoomID,
             office: event.OfficeID,
             attendees: event.Attendees,
-            // start: (event.Start).substring(0, (event.Start).indexOf(".")),
-            // end: (event.End).substring(0, (event.End).indexOf(".")),
             start: (event.Starts)[i],
             end: (event.Ends)[i],
             backColor: getRandomColor(),
         });
       }
     }
-
-    console.log(mappedEvents)
-    // const filteredEvents = events.filter(event => event.room === selectedRoom && event.office === selectedOffice);
-    // console.log(selectedRoom.toString());
-    // console.log(selectedOffice.toString());
-    // const filteredEvents = events.filter(event => event.room === selectedRoom.toString() && eve);
-
     const dash = "-";
     const zero = "0";
     const currentDate = new Date();
@@ -198,40 +186,62 @@ const Calendar = () => {
       }
       myfunc();
   }, [selectedRoom, selectedOffice]);
-  // }, [selectedRoom, selectedOffice]);
 
   return (
     <>
-    <div>
-    <label htmlFor="btn-check5" className="btn btn-primary-border" >Select Office: 
-      <OfficeSelect selectedOffice={selectedOffice} setSelectedOffice={setSelectedOffice} officeValue={officeValue} setOfficeValue={setOfficeValue}/>
-    </label>
-    <label htmlFor="btn-check5" className="btn btn-primary-border">Select Room: 
-      <RoomSelect selectedRoom={selectedRoom} setSelectedRoom={setSelectedRoom} roomValue={roomValue} setRoomValue={setRoomValue}/>
-    </label>
-    </div>
-    <div style={styles.wrap}>
-      <div style={styles.left}>
-        <DayPilotNavigator
-          selectMode={"Week"}
-          showMonths={3}
-          skipMonths={3}
-          startDate={new Date()}
-          selectionDay={new Date()}
-          onTimeRangeSelected={ args => {
-            calendarRef.current.control.update({
-              startDate: args.day
-            });
-          }}
-        />
-      </div>
-      <div style={styles.main}>
-        <DayPilotCalendar
-          {...calendarConfig}
-          ref={calendarRef}
-        />
-      </div>
-    </div>
+      <Helmet>
+        <title> Weekly view</title>
+      </Helmet>
+
+      <Container maxWidth="xl">
+        <Typography variant="h4" sx={{ mb: 5 }}>
+              Weekly Bookings
+        </Typography>
+
+
+        <Grid container spacing={3} >
+          <Grid item xs={3}>
+          </Grid>
+          <Grid item xs={3}>
+            <label htmlFor="btn-check5" className="btn btn-primary-border" >Select Office: 
+              <OfficeSelect 
+                selectedOffice={selectedOffice} setSelectedOffice={setSelectedOffice} 
+                officeValue={officeValue} setOfficeValue={setOfficeValue}
+                />
+            </label>
+          </Grid>
+          <Grid item xs={3}>
+            <label htmlFor="btn-check5" className="btn btn-primary-border">Select Room: 
+              <RoomSelect 
+                selectedRoom={selectedRoom} setSelectedRoom={setSelectedRoom} 
+                roomValue={roomValue} setRoomValue={setRoomValue}
+                />
+            </label>
+          </Grid>
+          <div style={styles.wrap}>
+            <Grid item style={styles.left}>
+              <DayPilotNavigator
+                selectMode={"Week"}
+                showMonths={3}
+                skipMonths={3}
+                startDate={new Date()}
+                selectionDay={new Date()}
+                onTimeRangeSelected={ args => {
+                  calendarRef.current.control.update({
+                    startDate: args.day
+                  });
+                }}
+              />
+            </Grid> 
+            <Grid item style={styles.main}>
+              <DayPilotCalendar
+                {...calendarConfig}
+                ref={calendarRef}
+              />
+            </Grid>
+          </div>
+        </Grid>
+      </Container>
     </>
   );
 }

@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {DayPilot, DayPilotScheduler} from "daypilot-pro-react";
+import { Helmet } from 'react-helmet-async';
+import { Grid, Container, Typography, Item } from '@mui/material';
+
 
 const styles = {
   wrap: {
@@ -173,22 +176,6 @@ const DailyViewPage2 = () => {
   });
 
   const fetch_resources = async () => {
-    console.log("fetching...")
-    // {
-      //     "name": "Office 1",
-      //     "id": "G1",
-      //     "expanded": false,
-      //     "children": [
-      //       {
-      //         "name": "Room 1",
-      //         "id": "R1"
-      //       },
-      //       {
-      //         "name": "Room 2",
-      //         "id": "R2"
-      //       }
-      //     ]
-      //   },
     let response = await fetch("http://localhost:8080/office/", {
         method: "GET", 
         })
@@ -234,85 +221,14 @@ const DailyViewPage2 = () => {
 
       const resources = await fetch_resources()
 
-      // const resources = [
-      //   {
-      //     "name": "Office 1",
-      //     "id": "G1",
-      //     "expanded": false,
-      //     "children": [
-      //       {
-      //         "name": "Room 1",
-      //         "id": "R1"
-      //       },
-      //       {
-      //         "name": "Room 2",
-      //         "id": "R2"
-      //       }
-      //     ]
-      //   },
-      //   {
-      //     "name": "Office 2",
-      //     "id": "G2",
-      //     "expanded": false,
-      //     "children": [
-      //       {
-      //         "name": "Room 3",
-      //         "id": "R3"
-      //       },
-      //       {
-      //         "name": "Room 4",
-      //         "id": "R4"
-      //       }
-      //     ]
-      //   }
-      // ]
       calendarRef.current.control.update({resources:resources});
-      console.log("resources Done!")
       
-      // const mappedEvents= [
-      //   {
-      //     id: 100,
-      //     text: "Meet 1",
-      //     start: "2023-07-11T00:00:00",
-      //     end: "2023-07-11T01:30:00",
-      //     resource: "G1",
-      //     // barBackColor: "#93c47d",
-      //   },
-        // {
-        //   id: 2,
-        //   text: "Meet 2",
-        //   start: "2022-05-03T00:00:00",
-        //   end: "2022-05-10T00:00:00",
-        //   resource: "C",
-        //   barColor: "#38761d",
-        //   barBackColor: "#93c47d"
-        // },
-        // {
-        //   id: 3,
-        //   text: "Meet 3",
-        //   start: "2022-05-02T00:00:00",
-        //   end: "2022-05-08T00:00:00",
-        //   resource: "D",
-        //   barColor: "#f1c232",
-        //   barBackColor: "#f1c232"
-        // },
-        // {
-        //   id: 4,
-        //   text: "Meet 3",
-        //   start: "2022-05-02T00:00:00",
-        //   end: "2022-05-08T00:00:00",
-        //   resource: "E",
-        //   barColor: "#cc0000",
-        //   barBackColor: "#ea9999"
-        // }
-      // ]
       // get rooms from back
       const response = await fetch("http://localhost:8080/booking/", {
         method: "GET", 
       })
   
       const events = await response.json()
-      console.log("got events:", events)
       
       const mappedEvents = []
       let id = 0
@@ -351,114 +267,29 @@ const DailyViewPage2 = () => {
           id++
         }
       }
-
-      // console.log("mapped : ", mappedEvents)
-      // const filteredEvents = events.filter(event => event.room === selectedRoom && event.office === selectedOffice);
-      // console.log(selectedRoom.toString());
-      // console.log(selectedOffice.toString());
-      // const filteredEvents = events.filter(event => event.room === selectedRoom.toString() && eve);
-  
-      // const dash = "-";
-      // const zero = "0";
-      // const currentDate = new Date();
-      // const year = currentDate.getFullYear();
-      // const month = (zero + (currentDate.getMonth() + 1)).slice(-2);
-      // const day = (zero + currentDate.getDate()).slice(-2);
-      // const startDate = year + dash + month + dash + day;      
-      // calendarRef.current.control.update({startDate, events: mappedEvents});
       calendarRef.current.control.update({events: mappedEvents});
-      console.log("Done!!!")
         }
         myfunc();
     }, [selectedRoom, selectedOffice]);
 
-  // componentDidMount() {
-
-  //   // load resource and event data
-  //   this.setState({
-  //     resources: [
-  //       {
-  //         "name": "Office 1",
-  //         "id": "G1",
-  //         "expanded": false,
-  //         "children": [
-  //           {
-  //             "name": "Room 1",
-  //             "id": "R1"
-  //           },
-  //           {
-  //             "name": "Room 2",
-  //             "id": "R2"
-  //           }
-  //         ]
-  //       },
-  //       {
-  //         "name": "Office 2",
-  //         "id": "G2",
-  //         "expanded": false,
-  //         "children": [
-  //           {
-  //             "name": "Room 3",
-  //             "id": "R3"
-  //           },
-  //           {
-  //             "name": "Room 4",
-  //             "id": "R4"
-  //           }
-  //         ]
-  //       }
-  //     ],
-  //     events: [
-  //       {
-  //         id: 1,
-  //         text: "Meet 1",
-  //         start: "2022-05-02T00:00:00",
-  //         end: "2022-05-05T00:00:00",
-  //         resource: "A"
-  //       },
-  //       {
-  //         id: 2,
-  //         text: "Meet 2",
-  //         start: "2022-05-03T00:00:00",
-  //         end: "2022-05-10T00:00:00",
-  //         resource: "C",
-  //         barColor: "#38761d",
-  //         barBackColor: "#93c47d"
-  //       },
-  //       {
-  //         id: 3,
-  //         text: "Meet 3",
-  //         start: "2022-05-02T00:00:00",
-  //         end: "2022-05-08T00:00:00",
-  //         resource: "D",
-  //         barColor: "#f1c232",
-  //         barBackColor: "#f1c232"
-  //       },
-  //       {
-  //         id: 4,
-  //         text: "Meet 3",
-  //         start: "2022-05-02T00:00:00",
-  //         end: "2022-05-08T00:00:00",
-  //         resource: "E",
-  //         barColor: "#cc0000",
-  //         barBackColor: "#ea9999"
-  //       }
-  //     ]
-  //   });
-
-  // }
-
-//   get scheduler() {
-//     return this.schedulerRef.current.control;
-//   }
-
     return (
+      <>
+      <Helmet>
+        <title> Daily view</title>
+      </Helmet>
+
+      <Container maxWidth="xl">
+        <Typography variant="h4" sx={{ mb: 5 }}>
+              Daily Bookings
+        </Typography>
       <div>
         <DayPilotScheduler
           {...calendarConfig}
           ref={calendarRef}
         />
       </div>
+      </Container>
+      </>
     );
 }
 

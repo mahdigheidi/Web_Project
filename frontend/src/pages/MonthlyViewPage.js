@@ -3,6 +3,8 @@ import {DayPilot, DayPilotMonth} from "@daypilot/daypilot-lite-react";
 import "./MonthStyles.css";
 import "./icons/style.css";
 import { OfficeSelect, RoomSelect } from './Selectors'
+import { Helmet } from 'react-helmet-async';
+import { Grid, Container, Typography, Item } from '@mui/material';
 
 const default_option = {id:-1, name:"All"}
 const styles = {
@@ -27,9 +29,6 @@ function getRandomColor() {
   return event_colors[(Math.floor(Math.random() * event_colors.length))];
 }
 
-
-
-// class MonthlyCalendar extends Component {
 const MonthlyCalendar = (props) => {
   const [selectedOffice, setSelectedOffice] = useState(default_option);
   const [officeValue, setOfficeValue] = useState('');
@@ -55,7 +54,6 @@ const MonthlyCalendar = (props) => {
   const handleEventCreation = async (args) => {
     const rooms = await fetchRooms();
     const dp = calendarRef.current.control;
-  //   const modal = await DayPilot.Modal.prompt("Book A New Meeting: Specify Room No", "Meeting Title");
     const modal = await DayPilot.Modal.form ([
       {name: "title", id:"title", type:"text"},
       // {name: "office", id:"office", type:"text"},
@@ -63,20 +61,6 @@ const MonthlyCalendar = (props) => {
       {name: "attendees", id:"attendees", type:"text"},
       {name: "start_hour", id:"start_hour", type:"text"},
       {name: "end_hour", id:"end_hour", type:"text"},
-      // {name: "start_hour", id:"start_hour", type:"date", dateFormat:"hh:mm"},
-      // {name: "end_hour", id:"end_hour", type:"date", dateFormat:"hh:mm"},
-      // {room: ""},
-      // {attendees: ""},
-      // {start_hour: DayPilot.Modal.Date},
-      // {end_hour: ""},
-
-      // <OfficeSelect selectedOffice={selectedOffice} setSelectedOffice={setSelectedOffice} officeValue={officeValue} setOfficeValue={setOfficeValue}/>,
-      // {title: "Meeting title"},
-      // {office: ""},
-      // {room: ""},
-      // {attendees: ""},
-      // {start_hour: DayPilot.Modal.Date},
-      // {end_hour: ""},
     ]);
     console.log(modal.result.end_hour)
 
@@ -121,7 +105,6 @@ const MonthlyCalendar = (props) => {
   const handleEventEdition  = async (args) => {
     // TODO
     const dp = calendarRef.current.control;
-  //   const modal = await DayPilot.Modal.prompt("Update Meeting Details:", args.e.text());
     const modal = await DayPilot.Modal.form({
         // "Update Meeting Details:",
         title: args.e.text(),
@@ -172,7 +155,6 @@ const MonthlyCalendar = (props) => {
             (selectedRoom === default_option || event.RoomID === selectedRoom.id)  &&
             (selectedOffice === default_option || event.OfficeID === selectedOffice.id)
         );
-      // console.log("filtered events:", filteredEvents)
       const mappedEvents = []
       for (let i in filteredEvents) {
         let event = filteredEvents[i]
@@ -182,35 +164,13 @@ const MonthlyCalendar = (props) => {
             room: event.RoomID,
             office: event.OfficeID,
             attendees: event.Attendees,
-            // start: (event.Start).substring(0, (event.Start).indexOf(".")),
-            // end: (event.End).substring(0, (event.End).indexOf(".")),
             start: (event.Starts)[0],
             end: (event.Ends)[(event.Ends).length - 1],
             backColor: getRandomColor(),
         });
         }
-      // const mappedEvents = filteredEvents.map(
-      //     (event) => {
-      //       return {
-      //         id: event.ID, 
-      //         text: event.Title,
-      //         room: event.RoomID,
-      //         office: event.OfficeID,
-      //         attendees: event.Attendees,
-      //         // start: (event.Start).substring(0, (event.Start).indexOf(".")),
-      //         // end: (event.End).substring(0, (event.End).indexOf(".")),
-      //         start: (event.Start),
-      //         end: (event.End),
-      //         backColor: getRandomColor()
-      //       }
-      //     }
-      // )
       console.log(mappedEvents)
-      // const filteredEvents = events.filter(event => event.room === selectedRoom && event.office === selectedOffice);
-      // console.log(selectedRoom.toString());
-      // console.log(selectedOffice.toString());
-      // const filteredEvents = events.filter(event => event.room === selectedRoom.toString() && eve);
-  
+
       const dash = "-";
       const zero = "0";
       const currentDate = new Date();
@@ -226,6 +186,14 @@ const MonthlyCalendar = (props) => {
 
   return (
       <>
+      <Helmet>
+        <title> Monthly view</title>
+      </Helmet>
+
+      <Container maxWidth="xl">
+        <Typography variant="h4" sx={{ mb: 5 }}>
+              Monthly Bookings
+        </Typography>
       <div>
         <label htmlFor="btn-check5" className="btn btn-primary-border" >Select Office: 
           <OfficeSelect selectedOffice={selectedOffice} setSelectedOffice={setSelectedOffice} officeValue={officeValue} setOfficeValue={setOfficeValue}/>
@@ -240,6 +208,7 @@ const MonthlyCalendar = (props) => {
           ref={calendarRef}
         />
       </div>
+      </Container>
       </>
     );
 }
