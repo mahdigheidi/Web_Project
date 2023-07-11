@@ -32,26 +32,26 @@ const navConfig = [
     path: '/dashboard/search_room',
     icon: icon1('search')
   },
-  {
-    title: 'Dashboard',
-    path: '/dashboard/app',
-    icon: icon('ic_analytics'),
-  },
+  // {
+  //   title: 'Dashboard',
+  //   path: '/dashboard/app',
+  //   icon: icon('ic_analytics'),
+  // },
   {
     title: 'User',
     path: '/dashboard/user',
     icon: icon('ic_user'),
   },
-  {
-    title: 'Product',
-    path: '/dashboard/products',
-    icon: icon('ic_cart'),
-  },
-  {
-    title: 'Blog',
-    path: '/dashboard/blog',
-    icon: icon('ic_blog'),
-  },
+  // {
+  //   title: 'Product',
+  //   path: '/dashboard/products',
+  //   icon: icon('ic_cart'),
+  // },
+  // {
+  //   title: 'Blog',
+  //   path: '/dashboard/blog',
+  //   icon: icon('ic_blog'),
+  // },
   // {
   //   title: 'Login',
   //   path: '/login',
