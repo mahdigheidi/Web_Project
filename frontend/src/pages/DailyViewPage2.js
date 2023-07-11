@@ -36,14 +36,14 @@ const DailyViewPage2 = () => {
   const handleEventCreation = async (args) => {
     const dp = calendarRef.current.control;
   //   const modal = await DayPilot.Modal.prompt("Book A New Meeting: Specify Room No", "Meeting Title");
-  const modal = await DayPilot.Modal.form ([
-    {name: "title", id:"title", type:"text"},
-    // {name: "office", id:"office", type:"text"},
-    // {name: "room", id:"room", type:"text"},
-    {name: "attendees", id:"attendees", type:"text"},
+    const modal = await DayPilot.Modal.form ([
+      {name: "title", id:"title", type:"text"},
+      // {name: "office", id:"office", type:"text"},
+      // {name: "room", id:"room", type:"text"},
+      {name: "attendees", id:"attendees", type:"text"},
 
-  ]);
-  console.log("AAA", args, modal.result);
+    ]);
+    console.log("AAA", args, modal.result);
 
     // const response = await fetch("http://localhost:8080/add_booking/", {
     //   method: "POST", 
@@ -102,42 +102,43 @@ const DailyViewPage2 = () => {
 
 
   const [calendarConfig, setCalendarConfig] = useState({
-    viewType: "Week",
+    // viewType: "Week",
     cellWidthSpec: "Fixed",
-    cellWidth: 50,
+    cellWidth: 20,
     timeHeaders: [{"groupBy":"Day","format":"dddd, d MMMM yyyy"},{"groupBy":"Hour"},{"groupBy":"Cell","format":"mm"}],
     scale: "CellDuration",
     cellDuration: 15,
-    days: DayPilot.Date.today().daysInYear(),
-    startDate: new DayPilot.Date().toString('yyyy-MM-dd'),
+    days: DayPilot.Date.today().dayOfWeek(),
+    startDate: new DayPilot.Date.today().addHours(6),
     eventHeight: 60,
-    // groupConcurrentEvents: true,
-    // allowEventOverlap: false,
-    // timeRangeSelectedHandling: "Enabled",
-    // onTimeRangeSelected: handleEventCreation,
+    groupConcurrentEvents: true,
+    allowEventOverlap: false,
+    timeRangeSelectedHandling: "Enabled",
+    onTimeRangeSelected: handleEventCreation,
     // eventDeleteHandling: "Update",
     // onEventClick: handleEventEdition,
-    // onEventMoved: (args) => {
-    //   args.control.message("Meeting Moved: " , args.e.text());
-    // },
-    // eventResizeHandling: "Update",
-    // onEventResized: (args) => {
-    //   args.control.message("Meeting Resized: " , args.e.text());
-    // },
-    // eventDeleteHandling: "Update",
-    // onEventDeleted: (args) => {
-    //   args.control.message("Meeting Deleted: " , args.e.text());
-    // },
-    // eventClickHandling: "Disabled",
-    // eventHoverHandling: "Bubble",
-    // bubble: new DayPilot.Bubble({
-    //   onLoad: (args) => {
-    //     // if event object doesn't specify "bubbleHtml" property 
-    //     // this onLoad handler will be called to provide the bubble HTML
-    //     args.html = "Meeting Details";
-    //   }
-    // }),
-    // treeEnabled: true,
+    eventMoveHandling: "Update",
+    onEventMoved: (args) => {
+      args.control.message("Meeting Moved: " , args.e.text());
+    },
+    eventResizeHandling: "Update",
+    onEventResized: (args) => {
+      args.control.message("Meeting Resized: " , args.e.text());
+    },
+    eventDeleteHandling: "Update",
+    onEventDeleted: (args) => {
+      args.control.message("Meeting Deleted: " , args.e.text());
+    },
+    eventClickHandling: "Disabled",
+    eventHoverHandling: "Bubble",
+    bubble: new DayPilot.Bubble({
+      onLoad: (args) => {
+        // if event object doesn't specify "bubbleHtml" property 
+        // this onLoad handler will be called to provide the bubble HTML
+        args.html = "Meeting Details";
+      }
+    }),
+    treeEnabled: true,
   });
 
   const fetch_resources = async () => {
@@ -195,52 +196,52 @@ const DailyViewPage2 = () => {
 
     async function myfunc() {
 
-      // const resources = await fetch_resources()
+      const resources = await fetch_resources()
 
-      const resources = [
-        {
-          "name": "Office 1",
-          "id": "G1",
-          "expanded": false,
-          "children": [
-            {
-              "name": "Room 1",
-              "id": "R1"
-            },
-            {
-              "name": "Room 2",
-              "id": "R2"
-            }
-          ]
-        },
-        {
-          "name": "Office 2",
-          "id": "G2",
-          "expanded": false,
-          "children": [
-            {
-              "name": "Room 3",
-              "id": "R3"
-            },
-            {
-              "name": "Room 4",
-              "id": "R4"
-            }
-          ]
-        }
-      ]
+      // const resources = [
+      //   {
+      //     "name": "Office 1",
+      //     "id": "G1",
+      //     "expanded": false,
+      //     "children": [
+      //       {
+      //         "name": "Room 1",
+      //         "id": "R1"
+      //       },
+      //       {
+      //         "name": "Room 2",
+      //         "id": "R2"
+      //       }
+      //     ]
+      //   },
+      //   {
+      //     "name": "Office 2",
+      //     "id": "G2",
+      //     "expanded": false,
+      //     "children": [
+      //       {
+      //         "name": "Room 3",
+      //         "id": "R3"
+      //       },
+      //       {
+      //         "name": "Room 4",
+      //         "id": "R4"
+      //       }
+      //     ]
+      //   }
+      // ]
       calendarRef.current.control.update({resources:resources});
-      console.log("Done!")
+      console.log("resources Done!")
       
-      const mappedEvents= [
-        {
-          id: 100,
-          text: "Meet 1",
-          start: "2023-07-11T01:30:00",
-          end: "2023-07-11T02:30:00",
-          resource: "G1",
-          barBackColor: "#93c47d",
-        },
+      // const mappedEvents= [
+      //   {
+      //     id: 100,
+      //     text: "Meet 1",
+      //     start: "2023-07-11T00:00:00",
+      //     end: "2023-07-11T01:30:00",
+      //     resource: "G1",
+      //     // barBackColor: "#93c47d",
+      //   },
         // {
         //   id: 2,
         //   text: "Meet 2",
@@ -268,7 +269,7 @@ const DailyViewPage2 = () => {
         //   barColor: "#cc0000",
         //   barBackColor: "#ea9999"
         // }
-      ]
+      // ]
       // get rooms from back
       const response = await fetch("http://localhost:8080/booking/", {
         method: "GET", 
@@ -277,27 +278,27 @@ const DailyViewPage2 = () => {
       const events = await response.json()
       console.log("got events:", events)
       
-      // const mappedEvents = []
-      // let id = 0
-      // for (let i in events) {
-      //   let event = events[i]
-      //   for (let j = 0; j < event.Starts.length; j++) {
-      //     mappedEvents.push({
-      //         id: id, 
-      //         text: event.Title,
-      //         room: event.RoomID,
-      //         attendees: event.Attendees,
-      //         // start: (event.Start).substring(0, (event.Start).indexOf(".")),
-      //         // end: (event.End).substring(0, (event.End).indexOf(".")),
-      //         start: (event.Starts)[j],
-      //         end: (event.Ends)[j],
-      //         backColor: getRandomColor(),
-      //         resource: event.OfficeID,
-      //         office: event.OfficeID,
-      //     });
-      //     id++
-      //   }
-      // }
+      const mappedEvents = []
+      let id = 0
+      for (let i in events) {
+        let event = events[i]
+        for (let j = 0; j < event.Starts.length; j++) {
+          mappedEvents.push({
+              id: id, 
+              text: event.Title,
+              room: event.RoomID,
+              attendees: event.Attendees,
+              // start: (event.Start).substring(0, (event.Start).indexOf(".")),
+              // end: (event.End).substring(0, (event.End).indexOf(".")),
+              start: (event.Starts)[j],
+              end: (event.Ends)[j],
+              backColor: getRandomColor(),
+              resource: event.OfficeID,
+              office: event.OfficeID,
+          });
+          id++
+        }
+      }
 
       // console.log("mapped : ", mappedEvents)
       // const filteredEvents = events.filter(event => event.room === selectedRoom && event.office === selectedOffice);
