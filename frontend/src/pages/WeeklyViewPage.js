@@ -130,7 +130,6 @@ const Calendar = () => {
     const mappedEvents = []
     for (let i in filteredEvents) {
       let event = filteredEvents[i]
-      const new_events = []
       for (let i = 0; i < event.Starts.length; i++) {
         mappedEvents.push({
             id: event.ID, 
